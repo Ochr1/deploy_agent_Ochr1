@@ -142,4 +142,5 @@ The `.zip` contains the partial project as it was at the moment of the interrupt
 
 ## Video walkthrough
 
-https://your-video-link
+[https://your-video-link](https://drive.google.com/drive/home?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto)
+
