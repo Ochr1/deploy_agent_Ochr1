@@ -23,7 +23,7 @@ The script shows an interactive numbered menu:
 4) Exit
 ```
 
-Type the number and press Enter. Invalid choices are rejected and the menu is shown again. Options 2 and 3 ask for the project name you used when deploying (for `attendance_tracker_demo`, type `demo`).
+Type the number and press Enter. Invalid choices are rejected and the menu is shown again. Options 2 and 3 show a numbered list of the deployed `attendance_tracker_*` projects, and you type the number of the one you want.
 
 ## Feature 1: Deploy
 
@@ -75,11 +75,11 @@ This edits only the `"warning"` and `"failure"` lines in place, without reformat
 
 ## Feature 2: Run
 
-Asks for the project name, checks that the project and its files exist, then runs `python3 attendance_checker.py` inside the project folder. The app is interactive: type `P` or `A` for each student.
+Shows a numbered list of the deployed projects, you choose one by number, it checks that the project files exist, then runs `python3 attendance_checker.py` inside the project folder. The app is interactive: type `P` or `A` for each student.
 
 ## Feature 3: How log archiving works
 
-Asks for the project name, then:
+Shows a numbered list of the deployed projects, you choose one by number, then:
 
 1. Creates `archives/attendance/` and `archives/absent/` inside the project if they do not exist.
 2. Builds one timestamp with `date +%Y%m%d_%H%M%S`.
