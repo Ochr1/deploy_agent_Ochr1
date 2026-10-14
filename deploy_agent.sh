@@ -192,3 +192,77 @@ update_thresholds() {
     echo "Thresholds updated in $config:"
     grep -E '"(warning|failure)"' "$config"
 }
+
+deploy_failed() {
+    echo "ERROR: $1"
+    if [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+        rm -rf "$PROJECT_DIR"
+        echo "Removed incomplete directory $PROJECT_DIR"
+    fi
+    PROJECT_DIR=""
+    stop_trap
+}
+
+deploy_app() {
+    PROJECT_DIR=""
+    start_trap
+    if ! preflight_checks; then
+        stop_trap
+        return 1
+    fi
+    ask_project_name
+    local target="attendance_tracker_${PROJECT_NAME}"
+    if [ -e "$target" ]; then
+        echo "$target already exists."
+        while true; do
+            ask "Overwrite it? This deletes the existing project. (y/n): "
+            case "$ANSWER" in
+                y|Y) break ;;
+                n|N) echo "ERROR: deployment aborted. $target was not changed."; stop_trap; return 1 ;;
+                *) echo "Please enter y or n." ;;
+            esac
+        done
+        if ! rm -rf "$target"; then
+            deploy_failed "could not remove $target (permission denied?)"
+            return 1
+        fi
+        echo "Removed the old $target"
+    fi
+
+    PROJECT_DIR="$target"
+    if ! mkdir -p "$PROJECT_DIR/Helpers" "$PROJECT_DIR/reports"; then
+        deploy_failed "could not create $PROJECT_DIR (permission denied?)"
+        return 1
+    fi
+    if ! cp "$TEMPLATE_DIR/attendance_checker.py" "$PROJECT_DIR/"; then
+        deploy_failed "could not copy attendance_checker.py"
+        return 1
+    fi
+    if ! cp "$TEMPLATE_DIR/config.json" "$PROJECT_DIR/Helpers/"; then
+        deploy_failed "could not copy config.json"
+        return 1
+    fi
+    echo "Created $PROJECT_DIR with Helpers/ and reports/"
+
+    if ! build_roster; then
+        deploy_failed "could not write Helpers/assets.csv"
+        return 1
+    fi
+
+    if ! chmod +x "$PROJECT_DIR/attendance_checker.py" || ! chmod 600 "$PROJECT_DIR/Helpers/config.json"; then
+        deploy_failed "could not set file permissions"
+        return 1
+    fi
+    echo "Permissions set: attendance_checker.py is executable, config.json is owner read/write only (600)."
+    ls -l "$PROJECT_DIR/attendance_checker.py" "$PROJECT_DIR/Helpers/config.json"
+
+    if ! update_thresholds; then
+        deploy_failed "could not update thresholds in config.json"
+        return 1
+    fi
+
+    stop_trap
+    echo "Deployment complete: $PROJECT_DIR"
+    echo "Verifying the deployment by starting the application..."
+    run_project "$PROJECT_DIR"
+}
