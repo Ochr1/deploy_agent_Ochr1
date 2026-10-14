@@ -151,3 +151,44 @@ build_roster() {
         echo "Generated $NUMBER new students (total_sessions set to 1)."
     fi
 }
+
+ask_threshold() {
+    while true; do
+        ask "$1"
+        if [ -z "$ANSWER" ]; then
+            NUMBER="$2"
+            return 0
+        fi
+        if [[ "$ANSWER" =~ ^(0|[1-9][0-9]{0,2})$ ]] && [ "$ANSWER" -le 100 ]; then
+            NUMBER="$ANSWER"
+            return 0
+        fi
+        echo "Invalid value '$ANSWER'. Enter a whole number from 0 to 100, or press Enter for $2."
+    done
+}
+
+update_thresholds() {
+    local config="$PROJECT_DIR/Helpers/config.json"
+    while true; do
+        ask "Update the attendance alert thresholds? (y/n): "
+        case "$ANSWER" in
+            y|Y) break ;;
+            n|N) echo "Thresholds left unchanged."; return 0 ;;
+            *) echo "Please enter y or n." ;;
+        esac
+    done
+    while true; do
+        ask_threshold "Warning threshold [75]: " 75
+        WARNING="$NUMBER"
+        ask_threshold "Failure threshold [50]: " 50
+        FAILURE="$NUMBER"
+        if [ "$FAILURE" -lt "$WARNING" ]; then
+            break
+        fi
+        echo "The failure threshold must be lower than the warning threshold. Try again."
+    done
+    sed -i.bak -e "s/\"warning\": [0-9]*/\"warning\": $WARNING/" -e "s/\"failure\": [0-9]*/\"failure\": $FAILURE/" "$config" || return 1
+    rm -f "$config.bak"
+    echo "Thresholds updated in $config:"
+    grep -E '"(warning|failure)"' "$config"
+}
