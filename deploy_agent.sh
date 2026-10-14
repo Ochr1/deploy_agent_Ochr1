@@ -60,3 +60,31 @@ start_trap() {
 stop_trap() {
     trap - INT TSTP
 }
+
+on_interrupt() {
+    echo
+    echo "Deployment interrupted by $1. Cleaning up..."
+    if [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+        rm -f "${PROJECT_DIR}_archive.zip"
+        if zip -rq "${PROJECT_DIR}_archive.zip" "$PROJECT_DIR"; then
+            echo "Incomplete project saved to ${PROJECT_DIR}_archive.zip"
+            rm -rf "$PROJECT_DIR"
+            echo "Removed incomplete directory $PROJECT_DIR"
+        else
+            echo "ERROR: could not create ${PROJECT_DIR}_archive.zip, so $PROJECT_DIR was kept."
+        fi
+    else
+        echo "No project directory was created yet, so there is nothing to archive."
+    fi
+    echo "Session closed."
+    exit 130
+}
+
+start_trap() {
+    trap 'on_interrupt "Ctrl+C (SIGINT)"' INT
+    trap 'on_interrupt "Ctrl+Z (SIGTSTP)"' TSTP
+}
+
+stop_trap() {
+    trap - INT TSTP
+}
