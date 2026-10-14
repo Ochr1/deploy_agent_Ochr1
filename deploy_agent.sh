@@ -88,3 +88,31 @@ start_trap() {
 stop_trap() {
     trap - INT TSTP
 }
+
+preflight_checks() {
+    echo "Running pre-flight checks..."
+    if ! command -v python3 > /dev/null 2>&1; then
+        echo "ERROR: python3 is not installed. Install it and try again."
+        return 1
+    fi
+    if ! python3 --version; then
+        echo "ERROR: python3 is installed but does not run."
+        return 1
+    fi
+    if ! command -v zip > /dev/null 2>&1; then
+        echo "ERROR: zip is not installed. Install it and try again."
+        return 1
+    fi
+    echo "zip found at $(command -v zip)"
+    for f in attendance_checker.py assets.csv config.json; do
+        if [ ! -f "$TEMPLATE_DIR/$f" ]; then
+            echo "ERROR: $TEMPLATE_DIR/$f is missing. Run this script from the folder that contains templates/."
+            return 1
+        fi
+    done
+    if [ ! -w . ]; then
+        echo "ERROR: no write permission in $(pwd)."
+        return 1
+    fi
+    echo "Pre-flight checks passed."
+}
