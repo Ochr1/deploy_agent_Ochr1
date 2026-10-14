@@ -116,3 +116,38 @@ preflight_checks() {
     fi
     echo "Pre-flight checks passed."
 }
+
+NAMES=("Amara Uwase" "Brian Mugisha" "Chloe Ingabire" "David Habimana" "Esther Mukamana" "Felix Niyonzima" "Grace Umutoni" "Henry Kamanzi" "Irene Uwimana" "James Nkurunziza")
+EMAILS=("amara@example.com" "brian@example.com" "chloe@example.com" "david@example.com" "esther@example.com" "felix@example.com" "grace@example.com" "henry@example.com" "irene@example.com" "james@example.com")
+
+build_roster() {
+    local roster="$PROJECT_DIR/Helpers/assets.csv"
+    echo "How should the roster be built?"
+    echo "  A) Copy students from the template roster"
+    echo "  B) Generate a fresh roster"
+    while true; do
+        ask "Choose A or B: "
+        case "$ANSWER" in
+            A|a) ROSTER_OPTION="A"; break ;;
+            B|b) ROSTER_OPTION="B"; break ;;
+            *) echo "Please enter A or B." ;;
+        esac
+    done
+
+    if [ "$ROSTER_OPTION" = "A" ]; then
+        local available
+        available=$(tail -n +2 "$TEMPLATE_DIR/assets.csv" | grep -c .)
+        ask_number "How many students to copy (1-$available)? " 1 "$available"
+        head -n $((NUMBER + 1)) "$TEMPLATE_DIR/assets.csv" > "$roster" || return 1
+        echo "Copied $NUMBER students from $TEMPLATE_DIR/assets.csv (total_sessions stays 5)."
+    else
+        ask_number "How many students to generate (1-${#NAMES[@]})? " 1 "${#NAMES[@]}"
+        echo "Email,Names,Attendance Count,Absence Count" > "$roster" || return 1
+        for ((i = 0; i < NUMBER; i++)); do
+            echo "${EMAILS[$i]},${NAMES[$i]},0,0" >> "$roster" || return 1
+        done
+        sed -i.bak 's/"total_sessions": [0-9]*/"total_sessions": 1/' "$PROJECT_DIR/Helpers/config.json" || return 1
+        rm -f "$PROJECT_DIR/Helpers/config.json.bak"
+        echo "Generated $NUMBER new students (total_sessions set to 1)."
+    fi
+}
