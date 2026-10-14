@@ -142,4 +142,4 @@ The `.zip` contains the partial project as it was at the moment of the interrupt
 
 ## Video walkthrough
 
-VIDEO_LINK_HERE
+https://your-video-link
