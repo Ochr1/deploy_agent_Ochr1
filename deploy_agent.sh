@@ -266,3 +266,29 @@ deploy_app() {
     echo "Verifying the deployment by starting the application..."
     run_project "$PROJECT_DIR"
 }
+
+run_project() {
+    local dir="$1"
+    if [ ! -f "$dir/attendance_checker.py" ] || [ ! -f "$dir/Helpers/assets.csv" ] || [ ! -f "$dir/Helpers/config.json" ]; then
+        echo "ERROR: $dir is missing required files. Deploy it again (option 1)."
+        return 1
+    fi
+    echo "Starting attendance_checker.py in $dir"
+    (cd "$dir" && python3 attendance_checker.py)
+    local status=$?
+    if [ $status -eq 0 ]; then
+        echo "Application finished successfully."
+    else
+        echo "Application exited with status $status."
+    fi
+}
+
+run_app() {
+    ask_project_name
+    local dir="attendance_tracker_${PROJECT_NAME}"
+    if [ ! -d "$dir" ]; then
+        echo "ERROR: $dir does not exist. Deploy it first (option 1)."
+        return 1
+    fi
+    run_project "$dir"
+}
