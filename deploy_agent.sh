@@ -292,3 +292,34 @@ run_app() {
     fi
     run_project "$dir"
 }
+
+archive_logs() {
+    ask_project_name
+    local dir="attendance_tracker_${PROJECT_NAME}"
+    if [ ! -d "$dir" ]; then
+        echo "ERROR: $dir does not exist. Deploy it first (option 1)."
+        return 1
+    fi
+    if ! mkdir -p "$dir/archives/attendance" "$dir/archives/absent"; then
+        echo "ERROR: could not create $dir/archives (permission denied?)"
+        return 1
+    fi
+    local stamp
+    stamp=$(date +%Y%m%d_%H%M%S)
+    local count=0
+    for log in attendance absent; do
+        local src="$dir/reports/$log.log"
+        local dest="$dir/archives/$log/${log}_${stamp}.log"
+        if [ -f "$src" ]; then
+            if mv "$src" "$dest"; then
+                echo "Archived $src -> $dest"
+                count=$((count + 1))
+            else
+                echo "ERROR: could not archive $src"
+            fi
+        else
+            echo "No $log.log found in $dir/reports/, skipped."
+        fi
+    done
+    echo "$count log file(s) archived."
+}
