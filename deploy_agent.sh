@@ -256,7 +256,7 @@ run_project() {
 }
 
 run_app() {
-    ask_project_name
+    choose_project || return 1
     local dir="attendance_tracker_${PROJECT_NAME}"
     if [ ! -d "$dir" ]; then
         echo "ERROR: $dir does not exist. Deploy it first (option 1)."
@@ -266,7 +266,7 @@ run_app() {
 }
 
 archive_logs() {
-    ask_project_name
+    choose_project || return 1
     local dir="attendance_tracker_${PROJECT_NAME}"
     if [ ! -d "$dir" ]; then
         echo "ERROR: $dir does not exist. Deploy it first (option 1)."
@@ -313,6 +313,25 @@ main_menu() {
             *) echo "Invalid choice. Enter 1, 2, 3 or 4." ;;
         esac
     done
+}
+
+choose_project() {
+    local projects=()
+    for d in attendance_tracker_*; do
+        if [ -d "$d" ]; then
+            projects+=("$d")
+        fi
+    done
+    if [ ${#projects[@]} -eq 0 ]; then
+        echo "ERROR: no deployed projects found. Deploy one first (option 1)."
+        return 1
+    fi
+    echo "Deployed projects:"
+    for ((i = 0; i < ${#projects[@]}; i++)); do
+        echo "  $((i + 1))) ${projects[$i]}"
+    done
+    ask_number "Choose a project (1-${#projects[@]}): " 1 "${#projects[@]}"
+    PROJECT_NAME="${projects[$((NUMBER - 1))]#attendance_tracker_}"
 }
 
 main_menu
