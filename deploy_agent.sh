@@ -323,3 +323,24 @@ archive_logs() {
     done
     echo "$count log file(s) archived."
 }
+
+main_menu() {
+    while true; do
+        echo
+        echo "===== Attendance Tracker Deploy Agent ====="
+        echo "1) Deploy the application"
+        echo "2) Run the application"
+        echo "3) Archive the log files"
+        echo "4) Exit"
+        ask "Choose an option (1-4): "
+        case "$ANSWER" in
+            1) deploy_app ;;
+            2) run_app ;;
+            3) archive_logs ;;
+            4) echo "Goodbye."; exit 0 ;;
+            *) echo "Invalid choice. Enter 1, 2, 3 or 4." ;;
+        esac
+    done
+}
+
+main_menu
